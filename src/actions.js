@@ -16,7 +16,9 @@ module.exports = function (self) {
 			options: [{ id: 'channel', type: 'dropdown', label: 'Channel', default: '1', choices: CHANNEL_CHOICES }],
 			callback: async (event) => {
 				const ch = parseInt(event.options.channel)
-				const auth = self.config.useAuth ? { username: self.config.username, password: self.config.password } : undefined
+				const auth = self.config.useAuth
+					? { username: self.config.username, password: self.config.password }
+					: undefined
 				try {
 					await sendCommand(self.config.host, { km: ch }, auth)
 					self.channelState.km = ch
@@ -34,7 +36,9 @@ module.exports = function (self) {
 			options: [{ id: 'channel', type: 'dropdown', label: 'Channel', default: '1', choices: CHANNEL_CHOICES }],
 			callback: async (event) => {
 				const ch = parseInt(event.options.channel)
-				const auth = self.config.useAuth ? { username: self.config.username, password: self.config.password } : undefined
+				const auth = self.config.useAuth
+					? { username: self.config.username, password: self.config.password }
+					: undefined
 				try {
 					await sendCommand(self.config.host, { spk: ch }, auth)
 					self.channelState.spk = ch
@@ -52,7 +56,9 @@ module.exports = function (self) {
 			options: [{ id: 'channel', type: 'dropdown', label: 'Channel', default: '1', choices: CHANNEL_CHOICES }],
 			callback: async (event) => {
 				const ch = parseInt(event.options.channel)
-				const auth = self.config.useAuth ? { username: self.config.username, password: self.config.password } : undefined
+				const auth = self.config.useAuth
+					? { username: self.config.username, password: self.config.password }
+					: undefined
 				try {
 					await sendCommand(self.config.host, { usb1: ch }, auth)
 					self.channelState.usb1 = ch
@@ -70,7 +76,9 @@ module.exports = function (self) {
 			options: [{ id: 'channel', type: 'dropdown', label: 'Channel', default: '1', choices: CHANNEL_CHOICES }],
 			callback: async (event) => {
 				const ch = parseInt(event.options.channel)
-				const auth = self.config.useAuth ? { username: self.config.username, password: self.config.password } : undefined
+				const auth = self.config.useAuth
+					? { username: self.config.username, password: self.config.password }
+					: undefined
 				try {
 					await sendCommand(self.config.host, { usb2: ch }, auth)
 					self.channelState.usb2 = ch
@@ -88,7 +96,9 @@ module.exports = function (self) {
 			options: [{ id: 'channel', type: 'dropdown', label: 'Channel', default: '1', choices: CHANNEL_CHOICES }],
 			callback: async (event) => {
 				const ch = parseInt(event.options.channel)
-				const auth = self.config.useAuth ? { username: self.config.username, password: self.config.password } : undefined
+				const auth = self.config.useAuth
+					? { username: self.config.username, password: self.config.password }
+					: undefined
 				try {
 					await sendCommand(self.config.host, { km: ch, spk: ch, usb1: ch, usb2: ch }, auth)
 					self.channelState = { km: ch, spk: ch, usb1: ch, usb2: ch }

@@ -1,13 +1,13 @@
 'use strict'
 
 const { InstanceBase, Regex, runEntrypoint, InstanceStatus } = require('@companion-module/base')
-const UpgradeScripts      = require('./upgrades')
-const UpdateActions       = require('./actions')
-const UpdateFeedbacks     = require('./feedbacks')
+const UpgradeScripts = require('./upgrades')
+const UpdateActions = require('./actions')
+const UpdateFeedbacks = require('./feedbacks')
 const UpdateVariableDefinitions = require('./variables')
-const UpdatePresets       = require('./presets')
-const { sendCommand }     = require('./api')
-const http                = require('http')
+const UpdatePresets = require('./presets')
+const { sendCommand } = require('./api')
+const http = require('http')
 
 class ModuleInstance extends InstanceBase {
 	constructor(internal) {
@@ -107,9 +107,9 @@ class ModuleInstance extends InstanceBase {
 	 */
 	pollDevice() {
 		const options = {
-			host:    this.config.host,
-			path:    '/',
-			method:  'GET',
+			host: this.config.host,
+			path: '/',
+			method: 'GET',
 			timeout: 4000,
 		}
 
@@ -120,7 +120,9 @@ class ModuleInstance extends InstanceBase {
 
 		const req = http.request(options, (res) => {
 			let body = ''
-			res.on('data', (chunk) => { body += chunk })
+			res.on('data', (chunk) => {
+				body += chunk
+			})
 			res.on('end', () => {
 				if (res.statusCode === 200) {
 					this.parseStatusPage(body)
@@ -154,8 +156,8 @@ class ModuleInstance extends InstanceBase {
 		// Match patterns like: value="3" ... name="km" or similar form fields.
 		// This is a best-effort parse — adjust regex if the device firmware changes.
 		const patterns = {
-			km:   /name=["']?km["']?[^>]*value=["']?(\d)["']?|value=["']?(\d)["']?[^>]*name=["']?km["']?/i,
-			spk:  /name=["']?spk["']?[^>]*value=["']?(\d)["']?|value=["']?(\d)["']?[^>]*name=["']?spk["']?/i,
+			km: /name=["']?km["']?[^>]*value=["']?(\d)["']?|value=["']?(\d)["']?[^>]*name=["']?km["']?/i,
+			spk: /name=["']?spk["']?[^>]*value=["']?(\d)["']?|value=["']?(\d)["']?[^>]*name=["']?spk["']?/i,
 			usb1: /name=["']?usb1["']?[^>]*value=["']?(\d)["']?|value=["']?(\d)["']?[^>]*name=["']?usb1["']?/i,
 			usb2: /name=["']?usb2["']?[^>]*value=["']?(\d)["']?|value=["']?(\d)["']?[^>]*name=["']?usb2["']?/i,
 		}
@@ -174,8 +176,8 @@ class ModuleInstance extends InstanceBase {
 
 		if (changed) {
 			this.setVariableValues({
-				km_channel:   this.channelState.km,
-				spk_channel:  this.channelState.spk,
+				km_channel: this.channelState.km,
+				spk_channel: this.channelState.spk,
 				usb1_channel: this.channelState.usb1,
 				usb2_channel: this.channelState.usb2,
 			})
@@ -185,10 +187,18 @@ class ModuleInstance extends InstanceBase {
 
 	// --- Wiring helpers ---
 
-	updateActions()             { UpdateActions(this) }
-	updateFeedbacks()           { UpdateFeedbacks(this) }
-	updateVariableDefinitions() { UpdateVariableDefinitions(this) }
-	updatePresets()             { UpdatePresets(this) }
+	updateActions() {
+		UpdateActions(this)
+	}
+	updateFeedbacks() {
+		UpdateFeedbacks(this)
+	}
+	updateVariableDefinitions() {
+		UpdateVariableDefinitions(this)
+	}
+	updatePresets() {
+		UpdatePresets(this)
+	}
 }
 
 runEntrypoint(ModuleInstance, UpgradeScripts)

@@ -4,8 +4,8 @@ module.exports = function (self) {
 	const presets = {}
 
 	const peripherals = [
-		{ key: 'km',   label: 'KM',   actionId: 'switch_km',   categoryLabel: 'KM Switch' },
-		{ key: 'spk',  label: 'SPK',  actionId: 'switch_spk',  categoryLabel: 'Speaker Switch' },
+		{ key: 'km', label: 'KM', actionId: 'switch_km', categoryLabel: 'KM Switch' },
+		{ key: 'spk', label: 'SPK', actionId: 'switch_spk', categoryLabel: 'Speaker Switch' },
 		{ key: 'usb1', label: 'USB1', actionId: 'switch_usb1', categoryLabel: 'USB 1 Switch' },
 		{ key: 'usb2', label: 'USB2', actionId: 'switch_usb2', categoryLabel: 'USB 2 Switch' },
 	]

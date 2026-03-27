@@ -3,8 +3,8 @@
 const { combineRgb } = require('@companion-module/base')
 
 const PERIPHERAL_CHOICES = [
-	{ id: 'km',   label: 'Keyboard & Mouse' },
-	{ id: 'spk',  label: 'Speakers' },
+	{ id: 'km', label: 'Keyboard & Mouse' },
+	{ id: 'spk', label: 'Speakers' },
 	{ id: 'usb1', label: 'USB 1' },
 	{ id: 'usb2', label: 'USB 2' },
 ]
@@ -24,7 +24,7 @@ module.exports = function (self) {
 			label: 'Change style when peripheral is on the selected channel',
 			defaultStyle: {
 				bgcolor: combineRgb(0, 200, 0),
-				color:   combineRgb(0, 0, 0),
+				color: combineRgb(0, 0, 0),
 			},
 			options: [
 				{
@@ -44,7 +44,7 @@ module.exports = function (self) {
 			],
 			callback: (feedback) => {
 				const peripheral = feedback.options.peripheral
-				const expected   = parseInt(feedback.options.channel)
+				const expected = parseInt(feedback.options.channel)
 				return self.channelState[peripheral] === expected
 			},
 		},
