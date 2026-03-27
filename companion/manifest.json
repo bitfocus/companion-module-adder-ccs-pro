@@ -1,0 +1,27 @@
+{
+  "$schema": "../node_modules/@companion-module/base/assets/manifest.schema.json",
+  "id": "companion-module-adder-ccs-pro",
+  "name": "Adder CCS-PRO",
+  "shortname": "CCS-PRO",
+  "description": "Control the Adder CCS-PRO4 KM switch via HTTP",
+  "version": "0.1.0",
+  "license": "MIT",
+  "repository": "git+https://github.com/bitfocus/companion-module-adder-ccs-pro.git",
+  "bugs": "https://github.com/bitfocus/companion-module-adder-ccs-pro/issues",
+  "maintainers": [
+    {
+      "name": "Your Name",
+      "email": "your@email.com"
+    }
+  ],
+  "runtime": {
+    "type": "node22",
+    "api": "nodejs-ipc",
+    "apiVersion": "0.0.0",
+    "entrypoint": "../src/main.js"
+  },
+  "legacyIds": [],
+  "manufacturer": "Adder",
+  "products": ["CCS-PRO4"],
+  "keywords": ["kvm", "adder", "ccs-pro", "switch"]
+}
