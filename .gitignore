@@ -1,4 +1,6 @@
 node_modules/
 *.tgz
+pkg/
 .yarn/cache
 .yarn/install-state.gz
+.claude/
