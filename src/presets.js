@@ -1,7 +1,10 @@
 'use strict'
 
+const { maxChannel } = require('./channel-range')
+
 module.exports = function (self) {
 	const presets = {}
+	const maxCh = maxChannel(self)
 
 	const peripherals = [
 		{ key: 'km', label: 'KM', actionId: 'switch_km', categoryLabel: 'KM Switch' },
@@ -11,7 +14,7 @@ module.exports = function (self) {
 	]
 
 	for (const p of peripherals) {
-		for (let ch = 1; ch <= 4; ch++) {
+		for (let ch = 1; ch <= maxCh; ch++) {
 			presets[`${p.key}_ch${ch}`] = {
 				type: 'button',
 				category: p.categoryLabel,
@@ -47,7 +50,7 @@ module.exports = function (self) {
 	}
 
 	// Switch All presets (one per channel)
-	for (let ch = 1; ch <= 4; ch++) {
+	for (let ch = 1; ch <= maxCh; ch++) {
 		presets[`all_ch${ch}`] = {
 			type: 'button',
 			category: 'Switch All',

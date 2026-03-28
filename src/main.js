@@ -6,6 +6,7 @@ const UpdateActions = require('./actions')
 const UpdateFeedbacks = require('./feedbacks')
 const UpdateVariableDefinitions = require('./variables')
 const UpdatePresets = require('./presets')
+const { maxChannel } = require('./channel-range')
 const http = require('http')
 
 class ModuleInstance extends InstanceBase {
@@ -34,6 +35,9 @@ class ModuleInstance extends InstanceBase {
 
 	async configUpdated(config) {
 		this.config = config
+		this.updateActions()
+		this.updateFeedbacks()
+		this.updatePresets()
 		this.stopPolling()
 		this.startPolling()
 	}
@@ -47,6 +51,18 @@ class ModuleInstance extends InstanceBase {
 				width: 8,
 				default: '192.168.1.22',
 				regex: Regex.IP,
+			},
+			{
+				type: 'dropdown',
+				id: 'maxChannels',
+				label: 'Hardware',
+				width: 12,
+				default: '4',
+				choices: [
+					{ id: '4', label: 'CCS-PRO4 (4 channels)' },
+					{ id: '8', label: 'CCS-PRO8 (8 channels)' },
+				],
+				tooltip: 'Must match your switch. PRO8 uses the same HTTP API with channels 1–8.',
 			},
 			{
 				type: 'number',
@@ -161,12 +177,13 @@ class ModuleInstance extends InstanceBase {
 			usb2: /name=["']?usb2["']?[^>]*value=["']?(\d)["']?|value=["']?(\d)["']?[^>]*name=["']?usb2["']?/i,
 		}
 
+		const maxCh = maxChannel(this)
 		let changed = false
 		for (const [key, pattern] of Object.entries(patterns)) {
 			const match = html.match(pattern)
 			if (match) {
 				const ch = parseInt(match[1] || match[2])
-				if (ch >= 1 && ch <= 4 && this.channelState[key] !== ch) {
+				if (ch >= 1 && ch <= maxCh && this.channelState[key] !== ch) {
 					this.channelState[key] = ch
 					changed = true
 				}

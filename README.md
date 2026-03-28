@@ -1,6 +1,6 @@
 # companion-module-ccs-pro (`ccs-pro`)
 
-Bitfocus Companion module for the Adder CCS-PRO4 KM switch.
+Bitfocus Companion module for the Adder CCS-PRO4 / CCS-PRO8 KM switch (configure **Hardware** for 4 vs 8 channels).
 
 ## Setup
 

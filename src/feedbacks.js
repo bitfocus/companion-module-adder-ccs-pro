@@ -1,6 +1,7 @@
 'use strict'
 
 const { combineRgb } = require('@companion-module/base')
+const { maxChannel, buildChannelChoices } = require('./channel-range')
 
 const PERIPHERAL_CHOICES = [
 	{ id: 'km', label: 'Keyboard & Mouse' },
@@ -9,14 +10,9 @@ const PERIPHERAL_CHOICES = [
 	{ id: 'usb2', label: 'USB 2' },
 ]
 
-const CHANNEL_CHOICES = [
-	{ id: '1', label: 'Channel 1' },
-	{ id: '2', label: 'Channel 2' },
-	{ id: '3', label: 'Channel 3' },
-	{ id: '4', label: 'Channel 4' },
-]
-
 module.exports = function (self) {
+	const channelChoices = buildChannelChoices(maxChannel(self))
+
 	self.setFeedbackDefinitions({
 		channel_active: {
 			name: 'Peripheral on Channel',
@@ -39,7 +35,7 @@ module.exports = function (self) {
 					type: 'dropdown',
 					label: 'Channel',
 					default: '1',
-					choices: CHANNEL_CHOICES,
+					choices: channelChoices,
 				},
 			],
 			callback: (feedback) => {

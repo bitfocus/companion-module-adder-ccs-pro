@@ -1,19 +1,17 @@
 'use strict'
 
+const { InstanceStatus } = require('@companion-module/base')
 const { sendCommand } = require('./api')
-
-const CHANNEL_CHOICES = [
-	{ id: '1', label: 'Channel 1' },
-	{ id: '2', label: 'Channel 2' },
-	{ id: '3', label: 'Channel 3' },
-	{ id: '4', label: 'Channel 4' },
-]
+const { maxChannel, buildChannelChoices } = require('./channel-range')
 
 module.exports = function (self) {
+	const max = maxChannel(self)
+	const channelChoices = buildChannelChoices(max)
+
 	self.setActionDefinitions({
 		switch_km: {
 			name: 'Switch Keyboard & Mouse to Channel',
-			options: [{ id: 'channel', type: 'dropdown', label: 'Channel', default: '1', choices: CHANNEL_CHOICES }],
+			options: [{ id: 'channel', type: 'dropdown', label: 'Channel', default: '1', choices: channelChoices }],
 			callback: async (event) => {
 				const ch = parseInt(event.options.channel)
 				const auth = self.config.useAuth
@@ -33,7 +31,7 @@ module.exports = function (self) {
 
 		switch_spk: {
 			name: 'Switch Speakers to Channel',
-			options: [{ id: 'channel', type: 'dropdown', label: 'Channel', default: '1', choices: CHANNEL_CHOICES }],
+			options: [{ id: 'channel', type: 'dropdown', label: 'Channel', default: '1', choices: channelChoices }],
 			callback: async (event) => {
 				const ch = parseInt(event.options.channel)
 				const auth = self.config.useAuth
@@ -53,7 +51,7 @@ module.exports = function (self) {
 
 		switch_usb1: {
 			name: 'Switch USB 1 to Channel',
-			options: [{ id: 'channel', type: 'dropdown', label: 'Channel', default: '1', choices: CHANNEL_CHOICES }],
+			options: [{ id: 'channel', type: 'dropdown', label: 'Channel', default: '1', choices: channelChoices }],
 			callback: async (event) => {
 				const ch = parseInt(event.options.channel)
 				const auth = self.config.useAuth
@@ -73,7 +71,7 @@ module.exports = function (self) {
 
 		switch_usb2: {
 			name: 'Switch USB 2 to Channel',
-			options: [{ id: 'channel', type: 'dropdown', label: 'Channel', default: '1', choices: CHANNEL_CHOICES }],
+			options: [{ id: 'channel', type: 'dropdown', label: 'Channel', default: '1', choices: channelChoices }],
 			callback: async (event) => {
 				const ch = parseInt(event.options.channel)
 				const auth = self.config.useAuth
@@ -93,7 +91,7 @@ module.exports = function (self) {
 
 		switch_all: {
 			name: 'Switch All Peripherals to Channel',
-			options: [{ id: 'channel', type: 'dropdown', label: 'Channel', default: '1', choices: CHANNEL_CHOICES }],
+			options: [{ id: 'channel', type: 'dropdown', label: 'Channel', default: '1', choices: channelChoices }],
 			callback: async (event) => {
 				const ch = parseInt(event.options.channel)
 				const auth = self.config.useAuth
