@@ -1,5 +1,5 @@
 {
-	"name": "companion-module-adder-ccs-pro",
+	"name": "ccs-pro",
 	"version": "0.1.0",
 	"main": "src/main.js",
 	"scripts": {

@@ -38,12 +38,12 @@ Options:
 
 ### Variables
 
-| Variable                        | Description                          |
-| ------------------------------- | ------------------------------------ |
-| `$(adder-ccs-pro:km_channel)`   | Current channel for Keyboard & Mouse |
-| `$(adder-ccs-pro:spk_channel)`  | Current channel for Speakers         |
-| `$(adder-ccs-pro:usb1_channel)` | Current channel for USB 1            |
-| `$(adder-ccs-pro:usb2_channel)` | Current channel for USB 2            |
+| Variable                  | Description                          |
+| ------------------------- | ------------------------------------ |
+| `$(ccs-pro:km_channel)`   | Current channel for Keyboard & Mouse |
+| `$(ccs-pro:spk_channel)`  | Current channel for Speakers         |
+| `$(ccs-pro:usb1_channel)` | Current channel for USB 1            |
+| `$(ccs-pro:usb2_channel)` | Current channel for USB 2            |
 
 ### Presets
 

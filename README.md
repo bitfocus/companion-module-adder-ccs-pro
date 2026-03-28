@@ -1,4 +1,4 @@
-# companion-module-adder-ccs-pro
+# companion-module-ccs-pro (`ccs-pro`)
 
 Bitfocus Companion module for the Adder CCS-PRO4 KM switch.
 
