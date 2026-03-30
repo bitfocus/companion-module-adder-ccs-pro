@@ -9,7 +9,7 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/TomsFaire/companion-module-ccs-pro.git"
+		"url": "git+https://github.com/bitfocus/companion-module-adder-ccs-pro.git"
 	},
 	"engines": {
 		"node": "^22.20",
