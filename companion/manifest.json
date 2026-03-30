@@ -1,6 +1,6 @@
 {
 	"$schema": "../node_modules/@companion-module/base/assets/manifest.schema.json",
-	"id": "ccs-pro",
+	"id": "adder-ccs-pro",
 	"name": "Adder CCS-PRO",
 	"shortname": "CCS-PRO",
 	"description": "Control the Adder CCS-PRO4 / CCS-PRO8 KM switch via HTTP",
@@ -20,7 +20,7 @@
 		"apiVersion": "0.0.0",
 		"entrypoint": "../src/main.js"
 	},
-	"legacyIds": ["companion-module-adder-ccs-pro"],
+	"legacyIds": ["ccs-pro"],
 	"manufacturer": "Adder",
 	"products": ["CCS-PRO4", "CCS-PRO8"],
 	"keywords": ["kvm", "adder", "ccs-pro", "ccs-pro8", "switch"]
