@@ -1,12 +1,6 @@
 node_modules/
 package-lock.json
+/pkg
+/*.tgz
 DEBUG-*
-*.tgz
-pkg/
 /.yarn
-.claude/
-
-# Markdown — private by default; only README + Companion HELP ship in the repo
-*.md
-!README.md
-!companion/HELP.md

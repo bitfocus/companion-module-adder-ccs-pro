@@ -13,6 +13,7 @@ class ModuleInstance extends InstanceBase {
 	constructor(internal) {
 		super(internal)
 		this._pollTimer = null
+		this._pollLoopActive = false
 		this.channelState = { km: 1, spk: 1, usb1: 1, usb2: 1 }
 	}
 
@@ -101,18 +102,30 @@ class ModuleInstance extends InstanceBase {
 	// --- Polling ---
 
 	startPolling() {
-		if (this._pollTimer) return
-		const ms = (this.config.pollInterval || 5) * 1000
-		// Poll immediately on connect, then on interval
+		if (this._pollLoopActive) return
+		this._pollLoopActive = true
+		// First poll runs immediately; subsequent polls are scheduled after each request completes.
 		this.pollDevice()
-		this._pollTimer = setInterval(() => this.pollDevice(), ms)
 	}
 
 	stopPolling() {
+		this._pollLoopActive = false
 		if (this._pollTimer) {
-			clearInterval(this._pollTimer)
+			clearTimeout(this._pollTimer)
 			this._pollTimer = null
 		}
+	}
+
+	_scheduleNextPoll() {
+		if (!this._pollLoopActive) return
+		const ms = (this.config.pollInterval || 5) * 1000
+		if (this._pollTimer) {
+			clearTimeout(this._pollTimer)
+		}
+		this._pollTimer = setTimeout(() => {
+			this._pollTimer = null
+			if (this._pollLoopActive) this.pollDevice()
+		}, ms)
 	}
 
 	/**
@@ -121,6 +134,13 @@ class ModuleInstance extends InstanceBase {
 	 * in a table. We use simple regex parsing — no HTML parser needed.
 	 */
 	pollDevice() {
+		let finished = false
+		const complete = () => {
+			if (finished) return
+			finished = true
+			this._scheduleNextPoll()
+		}
+
 		const options = {
 			host: this.config.host,
 			path: '/',
@@ -139,13 +159,17 @@ class ModuleInstance extends InstanceBase {
 				body += chunk
 			})
 			res.on('end', () => {
-				if (res.statusCode === 200) {
-					this.parseStatusPage(body)
-					this.updateStatus(InstanceStatus.Ok)
-				} else if (res.statusCode === 401) {
-					this.updateStatus(InstanceStatus.BadConfig, 'Authentication required — check username/password')
-				} else {
-					this.updateStatus(InstanceStatus.UnknownWarning, `HTTP ${res.statusCode}`)
+				try {
+					if (res.statusCode === 200) {
+						this.parseStatusPage(body)
+						this.updateStatus(InstanceStatus.Ok)
+					} else if (res.statusCode === 401) {
+						this.updateStatus(InstanceStatus.BadConfig, 'Authentication required — check username/password')
+					} else {
+						this.updateStatus(InstanceStatus.UnknownWarning, `HTTP ${res.statusCode}`)
+					}
+				} finally {
+					complete()
 				}
 			})
 		})
@@ -153,6 +177,7 @@ class ModuleInstance extends InstanceBase {
 		req.on('error', (err) => {
 			this.log('warn', `Poll failed: ${err.message}`)
 			this.updateStatus(InstanceStatus.ConnectionFailure, err.message)
+			complete()
 		})
 		req.on('timeout', () => {
 			req.destroy(new Error('timeout'))
