@@ -1,48 +1,68 @@
-'use strict'
-
 const { InstanceBase, Regex, runEntrypoint, InstanceStatus } = require('@companion-module/base')
 const UpgradeScripts = require('./upgrades')
 const UpdateActions = require('./actions')
 const UpdateFeedbacks = require('./feedbacks')
 const UpdateVariableDefinitions = require('./variables')
 const UpdatePresets = require('./presets')
-const { maxChannel } = require('./channel-range')
-const http = require('http')
+
+const { getStatus } = require('./api');
 
 class ModuleInstance extends InstanceBase {
 	constructor(internal) {
 		super(internal)
-		this._pollTimer = null
-		this._pollLoopActive = false
-		this.channelState = { km: 1, spk: 1, usb1: 1, usb2: 1 }
 	}
 
 	async init(config) {
-		this.config = config
-		this.channelState = { km: 1, spk: 1, usb1: 1, usb2: 1 }
+		this.config = config;
+		this.feedbackList = ["active_channel", "power_status", "temperature_check"]
+		this.createChoiceLists();
+		this.deviceStatus = {psu1: "Active", psu2: "Inactive", temp: 0, km: "1", spk: "1", usb1: "1", usb2: "1"};
+		this.currentStatus = InstanceStatus.Connecting;
 
-		this.updateActions()
-		this.updateFeedbacks()
-		this.updateVariableDefinitions()
+
+
+		if (this.config.poll || this.currentStatus != InstanceStatus.Ok){
+			this.startPolling();
+		}
+
+
+		this.updateActions() // export actions
+		this.updateFeedbacks() // export feedbacks
 		this.updatePresets()
-
-		this.startPolling()
+		this.updateVariableDefinitions() // export variable definitions
+		await getStatus(this);
 	}
-
+	// When module gets deleted
 	async destroy() {
-		this.stopPolling()
 		this.log('debug', 'destroy')
 	}
 
 	async configUpdated(config) {
-		this.config = config
-		this.updateActions()
-		this.updateFeedbacks()
-		this.updatePresets()
-		this.stopPolling()
-		this.startPolling()
+		const versionChanged = config.ccs_version!=this.config.ccs_version
+		this.config = config;
+		if (versionChanged){
+			this.createChoiceLists();
+		}
+
+		this.stopPolling();
+		await getStatus(this);
+		if (this.config.poll || this.currentStatus != InstanceStatus.Ok){
+			this.startPolling();
+		}
 	}
 
+	createChoiceLists(){
+		let temp = [];
+		for(var i = 1; i < this.config.ccs_version+1; i++){
+			temp.push({id: i.toString(), label: `Channel ${i}`});
+		}
+		this.channelList = temp;
+		this.updateActions();
+		this.updateFeedbacks();
+		this.updatePresets();
+	}
+
+	// Return config fields for web config
 	getConfigFields() {
 		return [
 			{
@@ -50,194 +70,112 @@ class ModuleInstance extends InstanceBase {
 				id: 'host',
 				label: 'Device IP',
 				width: 8,
-				default: '192.168.1.22',
 				regex: Regex.IP,
+				default: "192.168.1.22"
 			},
 			{
 				type: 'dropdown',
-				id: 'maxChannels',
-				label: 'Hardware',
-				width: 12,
-				default: '4',
-				choices: [
-					{ id: '4', label: 'CCS-PRO4 (4 channels)' },
-					{ id: '8', label: 'CCS-PRO8 (8 channels)' },
-				],
-				tooltip: 'Must match your switch. PRO8 uses the same HTTP API with channels 1–8.',
+				id: 'ccs_version',
+				label: 'CCS-PRO Version',
+				choices: [{id: 4, label: "CCS-PRO4"}, {id: 8, label: "CCS-PRO8"}],
+				default: 4
 			},
 			{
-				type: 'number',
-				id: 'pollInterval',
-				label: 'Poll Interval (seconds)',
-				width: 4,
-				default: 5,
-				min: 2,
-				max: 60,
-				tooltip: 'How often to check device state for externally triggered switches',
-			},
-			{
-				type: 'checkbox',
-				id: 'useAuth',
+				id: 'useAuthentication',
 				label: 'Enable Authentication',
-				width: 12,
+				type: 'checkbox',
 				default: false,
+
 			},
 			{
 				type: 'textinput',
 				id: 'username',
-				label: 'Username',
+				label: 'username',
 				width: 6,
-				isVisible: (config) => !!config.useAuth,
+				default: "admin",
+				isVisibleExpression: '$(options:useAuthentication) === true'
 			},
 			{
 				type: 'textinput',
 				id: 'password',
-				label: 'Password',
+				label: 'password',
 				width: 6,
-				isVisible: (config) => !!config.useAuth,
+				default: "password",
+				isVisibleExpression: '$(options:useAuthentication) === true'
 			},
+			{
+				type: 'number',
+				id: 'pollInterval',
+				tooltip: "Poll CCS-PRO for channel status",
+				label: "CCS-PRO Poll Interval in ms",
+				width: 4,
+				min: 1000,
+				default: 5000
+			},
+			{
+				type: 'checkbox',
+				id: 'poll',
+				label: 'Poll',
+				tooltip: "Enable device polling. Allows for keeping feedback updated.",
+				width: 2,
+				default: false
+			}
 		]
 	}
 
-	// --- Polling ---
-
 	startPolling() {
-		if (this._pollLoopActive) return
-		this._pollLoopActive = true
-		// First poll runs immediately; subsequent polls are scheduled after each request completes.
-		this.pollDevice()
-	}
+        // Always clean up existing loops first
+        this.stopPolling();
 
-	stopPolling() {
-		this._pollLoopActive = false
-		if (this._pollTimer) {
-			clearTimeout(this._pollTimer)
-			this._pollTimer = null
-		}
-	}
+        if (this.config.pollInterval && (this.config.poll || this.currentStatus !== InstanceStatus.Ok)) {
+            this.isPolling = true; // Use a boolean flag to control the loop
+            this.pollLoop();
+			this.log("info", "Polling Started")
+        }
+    }
 
-	_scheduleNextPoll() {
-		if (!this._pollLoopActive) return
-		const ms = (this.config.pollInterval || 5) * 1000
-		if (this._pollTimer) {
-			clearTimeout(this._pollTimer)
-		}
-		this._pollTimer = setTimeout(() => {
-			this._pollTimer = null
-			if (this._pollLoopActive) this.pollDevice()
-		}, ms)
-	}
+    stopPolling() {
+        this.isPolling = false;
+        if (this.pollTimer) {
+            clearTimeout(this.pollTimer);
+            this.pollTimer = null;
+			this.log("info", "polling stopped")
+        }
 
-	/**
-	 * Fetch the device status page and parse current channel state.
-	 * The CCS-PRO HTML status page contains the current peripheral channels
-	 * in a table. We use simple regex parsing — no HTML parser needed.
-	 */
-	pollDevice() {
-		let finished = false
-		const complete = () => {
-			if (finished) return
-			finished = true
-			this._scheduleNextPoll()
-		}
+    }
 
-		const options = {
-			host: this.config.host,
-			path: '/',
-			method: 'GET',
-			timeout: 4000,
-		}
+    // The recursive loop
+    async pollLoop() {
+        // Safety check to ensure we don't fire if polling was stopped
+        if (!this.isPolling) return;
 
-		if (this.config.useAuth && this.config.username) {
-			const encoded = Buffer.from(`${this.config.username}:${this.config.password}`).toString('base64')
-			options.headers = { Authorization: `Basic ${encoded}` }
-		}
 
-		const req = http.request(options, (res) => {
-			let body = ''
-			res.on('data', (chunk) => {
-				body += chunk
-			})
-			res.on('end', () => {
-				try {
-					if (res.statusCode === 200) {
-						this.parseStatusPage(body)
-						this.updateStatus(InstanceStatus.Ok)
-					} else if (res.statusCode === 401) {
-						this.updateStatus(InstanceStatus.BadConfig, 'Authentication required — check username/password')
-					} else {
-						this.updateStatus(InstanceStatus.UnknownWarning, `HTTP ${res.statusCode}`)
-					}
-				} finally {
-					complete()
-				}
-			})
-		})
 
-		req.on('error', (err) => {
-			this.log('warn', `Poll failed: ${err.message}`)
-			this.updateStatus(InstanceStatus.ConnectionFailure, err.message)
-			complete()
-		})
-		req.on('timeout', () => {
-			req.destroy(new Error('timeout'))
-		})
-		req.end()
-	}
+        // 1. Await the API call. It will completely block here until success or failure.
+        await getStatus(this);
+	
 
-	/**
-	 * Parse channel values from the CCS Manager status page HTML.
-	 * The page contains a channel control table where KM, SPK, USB1, USB2
-	 * values appear. We extract numeric channel values with regex.
-	 * If parsing fails, state is left unchanged (optimistic values remain).
-	 */
-	parseStatusPage(html) {
-		// The status page renders current channel selections as numeric values.
-		// Match patterns like: value="3" ... name="km" or similar form fields.
-		// This is a best-effort parse — adjust regex if the device firmware changes.
-		const patterns = {
-			km: /name=["']?km["']?[^>]*value=["']?(\d)["']?|value=["']?(\d)["']?[^>]*name=["']?km["']?/i,
-			spk: /name=["']?spk["']?[^>]*value=["']?(\d)["']?|value=["']?(\d)["']?[^>]*name=["']?spk["']?/i,
-			usb1: /name=["']?usb1["']?[^>]*value=["']?(\d)["']?|value=["']?(\d)["']?[^>]*name=["']?usb1["']?/i,
-			usb2: /name=["']?usb2["']?[^>]*value=["']?(\d)["']?|value=["']?(\d)["']?[^>]*name=["']?usb2["']?/i,
-		}
-
-		const maxCh = maxChannel(this)
-		let changed = false
-		for (const [key, pattern] of Object.entries(patterns)) {
-			const match = html.match(pattern)
-			if (match) {
-				const ch = parseInt(match[1] || match[2])
-				if (ch >= 1 && ch <= maxCh && this.channelState[key] !== ch) {
-					this.channelState[key] = ch
-					changed = true
-				}
-			}
-		}
-
-		if (changed) {
-			this.setVariableValues({
-				km_channel: this.channelState.km,
-				spk_channel: this.channelState.spk,
-				usb1_channel: this.channelState.usb1,
-				usb2_channel: this.channelState.usb2,
-			})
-			this.checkFeedbacks('channel_active')
-		}
-	}
-
-	// --- Wiring helpers ---
+        // 2. Only schedule the NEXT run after the previous one finishes.
+        // This makes overlapping requests literally impossible.
+        if (this.isPolling) {
+            this.pollTimer = setTimeout(() => {
+                this.pollLoop();
+            }, this.config.pollInterval);
+        }
+    }
 
 	updateActions() {
 		UpdateActions(this)
 	}
+
 	updateFeedbacks() {
 		UpdateFeedbacks(this)
 	}
+
 	updateVariableDefinitions() {
 		UpdateVariableDefinitions(this)
 	}
-	updatePresets() {
+	updatePresets(){
 		UpdatePresets(this)
 	}
 }

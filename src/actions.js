@@ -1,116 +1,110 @@
-'use strict'
-
-const { InstanceStatus } = require('@companion-module/base')
-const { sendCommand } = require('./api')
-const { maxChannel, buildChannelChoices } = require('./channel-range')
+const {changeChannel, getStatus } = require('./api');
 
 module.exports = function (self) {
-	const max = maxChannel(self)
-	const channelChoices = buildChannelChoices(max)
-
 	self.setActionDefinitions({
-		switch_km: {
-			name: 'Switch Keyboard & Mouse to Channel',
-			options: [{ id: 'channel', type: 'dropdown', label: 'Channel', default: '1', choices: channelChoices }],
-			callback: async (event) => {
-				const ch = parseInt(event.options.channel)
-				const auth = self.config.useAuth
-					? { username: self.config.username, password: self.config.password }
-					: undefined
-				try {
-					await sendCommand(self.config.host, { km: ch }, auth)
-					self.channelState.km = ch
-					self.setVariableValues({ km_channel: ch })
-					self.checkFeedbacks('channel_active')
-				} catch (err) {
-					self.log('error', `switch_km failed: ${err.message}`)
-					self.updateStatus(InstanceStatus.ConnectionFailure, err.message)
-				}
-			},
-		},
+		switch_channel: {
+			name: 'Switch Channel',
+			options: [
+				{
+					id: 'useSingleChannel',
+					type: 'checkbox',
+					label: "Use the same channel for K/M, SPK, USB1, USB2",
+					default: true,
 
-		switch_spk: {
-			name: 'Switch Speakers to Channel',
-			options: [{ id: 'channel', type: 'dropdown', label: 'Channel', default: '1', choices: channelChoices }],
-			callback: async (event) => {
-				const ch = parseInt(event.options.channel)
-				const auth = self.config.useAuth
-					? { username: self.config.username, password: self.config.password }
-					: undefined
-				try {
-					await sendCommand(self.config.host, { spk: ch }, auth)
-					self.channelState.spk = ch
-					self.setVariableValues({ spk_channel: ch })
-					self.checkFeedbacks('channel_active')
-				} catch (err) {
-					self.log('error', `switch_spk failed: ${err.message}`)
-					self.updateStatus(InstanceStatus.ConnectionFailure, err.message)
-				}
-			},
-		},
+				},
+				{
+					id: 'channel',
+					type: 'dropdown',
+					label: 'Master Channel',
+					choices: self.channelList,
+					default: self.channelList[0] ? self.channelList[0].id : '1',
+					isVisibleExpression: '$(options:useSingleChannel) === true'
+				},
+				{
+					id: 'switchKM',
+					type: 'checkbox',
+					label: "Switch KM",
+					default: true,
+					isVisibleExpression: '$(options:useSingleChannel) === false'
 
-		switch_usb1: {
-			name: 'Switch USB 1 to Channel',
-			options: [{ id: 'channel', type: 'dropdown', label: 'Channel', default: '1', choices: channelChoices }],
-			callback: async (event) => {
-				const ch = parseInt(event.options.channel)
-				const auth = self.config.useAuth
-					? { username: self.config.username, password: self.config.password }
-					: undefined
-				try {
-					await sendCommand(self.config.host, { usb1: ch }, auth)
-					self.channelState.usb1 = ch
-					self.setVariableValues({ usb1_channel: ch })
-					self.checkFeedbacks('channel_active')
-				} catch (err) {
-					self.log('error', `switch_usb1 failed: ${err.message}`)
-					self.updateStatus(InstanceStatus.ConnectionFailure, err.message)
-				}
-			},
-		},
+				},
+				{
+					id: 'keyboard_mouse',
+					type: 'dropdown',
+					label: 'Keyboard/Mouse Channel',
+					choices: self.channelList,
+					default: self.channelList[0] ? self.channelList[0].id : '1',
+					isVisibleExpression: '$(options:useSingleChannel) === false  && $(options:switchKM) === true'
+				},
+				{
+					id: 'switchSPK',
+					type: 'checkbox',
+					label: "Switch Speaker",
+					default: true,
+					isVisibleExpression: '$(options:useSingleChannel) === false'
 
-		switch_usb2: {
-			name: 'Switch USB 2 to Channel',
-			options: [{ id: 'channel', type: 'dropdown', label: 'Channel', default: '1', choices: channelChoices }],
-			callback: async (event) => {
-				const ch = parseInt(event.options.channel)
-				const auth = self.config.useAuth
-					? { username: self.config.username, password: self.config.password }
-					: undefined
-				try {
-					await sendCommand(self.config.host, { usb2: ch }, auth)
-					self.channelState.usb2 = ch
-					self.setVariableValues({ usb2_channel: ch })
-					self.checkFeedbacks('channel_active')
-				} catch (err) {
-					self.log('error', `switch_usb2 failed: ${err.message}`)
-					self.updateStatus(InstanceStatus.ConnectionFailure, err.message)
-				}
-			},
-		},
+				},	
+				{
+					id: 'speaker',
+					type: 'dropdown',
+					label: 'Speaker Channel',
+					choices: self.channelList,
+					default: self.channelList[0] ? self.channelList[0].id : '1',
+					isVisibleExpression: '$(options:useSingleChannel) === false && $(options:switchSPK) === true'
+				},
+				{
+					id: 'switchUSB1',
+					type: 'checkbox',
+					label: "Switch USB1",
+					default: true,
+					isVisibleExpression: '$(options:useSingleChannel) === false'
 
-		switch_all: {
-			name: 'Switch All Peripherals to Channel',
-			options: [{ id: 'channel', type: 'dropdown', label: 'Channel', default: '1', choices: channelChoices }],
-			callback: async (event) => {
-				const ch = parseInt(event.options.channel)
-				const auth = self.config.useAuth
-					? { username: self.config.username, password: self.config.password }
-					: undefined
-				try {
-					await sendCommand(self.config.host, { km: ch, spk: ch, usb1: ch, usb2: ch }, auth)
-					self.channelState = { km: ch, spk: ch, usb1: ch, usb2: ch }
-					self.setVariableValues({
-						km_channel: ch,
-						spk_channel: ch,
-						usb1_channel: ch,
-						usb2_channel: ch,
-					})
-					self.checkFeedbacks('channel_active')
-				} catch (err) {
-					self.log('error', `switch_all failed: ${err.message}`)
-					self.updateStatus(InstanceStatus.ConnectionFailure, err.message)
+				},			
+				{
+					id: 'USB1',
+					type: 'dropdown',
+					label: 'USB1 Channel',
+					choices: self.channelList,
+					default: self.channelList[0] ? self.channelList[0].id : '1',
+					isVisibleExpression: '$(options:useSingleChannel) === false && $(options:switchUSB1) === true'
+				},
+				{
+					id: 'switchUSB2',
+					type: 'checkbox',
+					label: "Switch USB2",
+					default: true,
+					isVisibleExpression: '$(options:useSingleChannel) === false'
+
+				},
+				{
+					id: 'USB2',
+					type: 'dropdown',
+					label: 'USB2 Channel',
+					choices: self.channelList,
+					default: self.channelList[0] ? self.channelList[0].id : '1',
+					isVisibleExpression: '$(options:useSingleChannel) === false && $(options:switchUSB2) === true'
+				},
+			],
+			callback: async (action) => {
+				let channel = parseInt(action.options.channel);
+        
+				if (channel > self.config.ccs_version) {
+					self.log('warn', `Action aborted: Channel ${channel} is not valid for a ${self.config.ccs_version}-port switch.`);
+					return; 
 				}
+				if (action.options.useSingleChannel) {
+					let channel = action.options.channel; 
+					let success = await changeChannel(self, channel, channel, channel, channel);
+				} else {
+					let success = await changeChannel(
+						self, 
+						action.options.switchKM ? action.options.keyboard_mouse : null, 
+						action.options.switchSPK ? action.options.speaker : null, 
+						action.options.switchUSB1 ? action.options.USB1 : null, 
+						action.options.switchUSB2 ? action.options.USB2 : null
+					);
+				}
+				getStatus(self);
 			},
 		},
 	})
