@@ -40,11 +40,7 @@ async function changeChannel(self, km, spk, usb1, usb2, retry=0) {
         
         
     } catch (error) {
-        // Log the full stack trace to the UI and the raw error to the terminal
-        self.log("error", `Changing Channel failed: \n${error.stack || error.message}`);
-        
-        console.error("--- RAW URLLIB ERROR ---");
-        console.error(error);
+        self.log("error", `Changing Channel failed: \n${error.message}`);
         
         throw error;
     }
