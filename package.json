@@ -1,5 +1,6 @@
 {
-	"name": "adder-csc",
+	"name": "adder-ccs-pro",
+	"version": "1.0.0",
 	"main": "src/main.js",
 	"scripts": {
 		"format": "prettier -w .",
