@@ -1,8 +1,8 @@
 module.exports = function (self) {
 	self.setVariableDefinitions([
-		{ variableId: 'psu1_state', name: 'PSU 1 Status'},
-		{ variableId: 'psu2_state', name: 'PSU 2 Status'},
-		{ variableId: 'temperature', name: 'Current Temperature'},
+		{ variableId: 'psu1_state', name: 'PSU 1 Status' },
+		{ variableId: 'psu2_state', name: 'PSU 2 Status' },
+		{ variableId: 'temperature', name: 'Current Temperature' },
 		{ variableId: 'km_channel', name: 'KM Active Channel' },
 		{ variableId: 'spk_channel', name: 'Speaker Active Channel' },
 		{ variableId: 'usb1_channel', name: 'USB1 Active Channel' },
@@ -19,5 +19,4 @@ module.exports = function (self) {
 		usb1_channel: self.deviceStatus.usb1,
 		usb2_channel: self.deviceStatus.usb2,
 	})
-	
 }

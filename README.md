@@ -1,4 +1,5 @@
 # companion-module-adder-ccs-pro (`adder-ccs-pro`)
+
 See [HELP.md](./companion/HELP.md) and [LICENSE](./LICENSE)
 
 Bitfocus module for the Adder CCS-PRO4 / CCS-PRO8 KM switch (configure **Hardware** for 4 vs 8 channels).
@@ -10,6 +11,7 @@ Bitfocus module for the Adder CCS-PRO4 / CCS-PRO8 KM switch (configure **Hardwar
 ## Offline Setup
 
 ### Companion
+
 1. `yarn install`
 2. `yarn package`
 3. This should create a file with the extension `.tgz`
@@ -17,12 +19,15 @@ Bitfocus module for the Adder CCS-PRO4 / CCS-PRO8 KM switch (configure **Hardwar
 5. Select `Import module package` and select the `.tgz` file.
 
 ### Buttons
+
 #### Download Release Package
+
 1. Download release package from https://github.com/bitfocus/companion-module-adder-ccs-pro/releases
 2. In Buttons, in connections, import package.
 3. Select downloaded package folder.
 
 #### Build from Source
+
 1. `yarn install`
 2. `yarn package`
 3. This should create a `pkg` folder.

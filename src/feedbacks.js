@@ -1,5 +1,11 @@
 const { combineRgb } = require('@companion-module/base')
-const peripherals = [{id: "all", label: "All Peripherals"},{id: "km", label: "Keyboard/Mouse"}, {id: "spk", label: "Speaker"}, {id: "usb1", label: "USB1"}, {id:"usb2", label:"USB2"}]
+const peripherals = [
+	{ id: 'all', label: 'All Peripherals' },
+	{ id: 'km', label: 'Keyboard/Mouse' },
+	{ id: 'spk', label: 'Speaker' },
+	{ id: 'usb1', label: 'USB1' },
+	{ id: 'usb2', label: 'USB2' },
+]
 
 module.exports = async function (self) {
 	self.setFeedbackDefinitions({
@@ -17,7 +23,7 @@ module.exports = async function (self) {
 					type: 'dropdown',
 					label: 'peripheral',
 					choices: peripherals,
-					default: peripherals[0].id
+					default: peripherals[0].id,
 				},
 				{
 					id: 'channel',
@@ -25,16 +31,21 @@ module.exports = async function (self) {
 					label: 'Channel',
 					choices: self.channelList,
 					default: self.channelList[0] ? self.channelList[0].id : '1',
-				}
+				},
 			],
 			callback: (feedback) => {
 				if (parseInt(feedback.options.channel) > self.config.ccs_version) {
-        			return false;
-    }
-				if(feedback.options.peripheral == "all"){
-					return self.deviceStatus["km"] === feedback.options.channel && self.deviceStatus["spk"] === feedback.options.channel && self.deviceStatus["usb1"] === feedback.options.channel && self.deviceStatus["usb2"] === feedback.options.channel
+					return false
 				}
-				return self.deviceStatus[feedback.options.peripheral] === feedback.options.channel;
+				if (feedback.options.peripheral == 'all') {
+					return (
+						self.deviceStatus['km'] === feedback.options.channel &&
+						self.deviceStatus['spk'] === feedback.options.channel &&
+						self.deviceStatus['usb1'] === feedback.options.channel &&
+						self.deviceStatus['usb2'] === feedback.options.channel
+					)
+				}
+				return self.deviceStatus[feedback.options.peripheral] === feedback.options.channel
 			},
 		},
 		temperature_check: {
@@ -50,9 +61,9 @@ module.exports = async function (self) {
 						{ id: '<=', label: '<= (Less than or equal)' },
 						{ id: '===', label: '= (Equal to)' },
 						{ id: '>=', label: '>= (Greater than or equal)' },
-						{ id: '>', label: '> (Greater than)' }
+						{ id: '>', label: '> (Greater than)' },
 					],
-					default: '>'
+					default: '>',
 				},
 				{
 					type: 'number',
@@ -60,57 +71,57 @@ module.exports = async function (self) {
 					label: 'Target Temperature',
 					default: 30,
 					min: 0,
-					max: 150
-				}
+					max: 150,
+				},
 			],
 			callback: (feedback) => {
 				// 1. The live hardware state
-				const currentTemp = parseInt(self.deviceStatus.temp); 
-				
+				const currentTemp = parseInt(self.deviceStatus.temp)
+
 				// 2. The user's typed value
-				const target = parseInt(feedback.options.targetValue); 
-				
+				const target = parseInt(feedback.options.targetValue)
+
 				// 3. The mathematical map
 				const math = {
 					'<': (a, b) => a < b,
 					'>': (a, b) => a > b,
 					'===': (a, b) => a === b,
 					'>=': (a, b) => a >= b,
-					'<=': (a, b) => a <= b
-				};
+					'<=': (a, b) => a <= b,
+				}
 
 				// 4. Safely execute the dynamic string comparison
-				return math[feedback.options.operator](currentTemp, target);
-			}
-	},
-	power_status: {
-		type: 'boolean',
-		name: 'Power Status Alert',
-		options: [
-			{
-				type: 'dropdown',
-				id: 'power_supply',
-				label: 'Power Supply',
-				choices: [
-					{id: "psu1", label: "PSU 1"},
-					{id: "psu2", label: "PSU 2"}
-				],
-				default: "psu1"
+				return math[feedback.options.operator](currentTemp, target)
 			},
-			{
-            type: 'dropdown',
-            id: 'state',
-            label: 'Target State',
-            choices: [
-                { id: 'Active', label: 'Active' },
-                { id: 'Inactive', label: 'Inactive' }
-            ],
-            default: 'Inactive'
-        }
-		],
-		callback: (feedback) => {
-			return self.deviceStatus[feedback.options.power_supply] === feedback.options.state;
-		}
-	}
+		},
+		power_status: {
+			type: 'boolean',
+			name: 'Power Status Alert',
+			options: [
+				{
+					type: 'dropdown',
+					id: 'power_supply',
+					label: 'Power Supply',
+					choices: [
+						{ id: 'psu1', label: 'PSU 1' },
+						{ id: 'psu2', label: 'PSU 2' },
+					],
+					default: 'psu1',
+				},
+				{
+					type: 'dropdown',
+					id: 'state',
+					label: 'Target State',
+					choices: [
+						{ id: 'Active', label: 'Active' },
+						{ id: 'Inactive', label: 'Inactive' },
+					],
+					default: 'Inactive',
+				},
+			],
+			callback: (feedback) => {
+				return self.deviceStatus[feedback.options.power_supply] === feedback.options.state
+			},
+		},
 	})
 }
