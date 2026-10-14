@@ -1,48 +1,116 @@
-'use strict'
-
 const { combineRgb } = require('@companion-module/base')
-const { maxChannel, buildChannelChoices } = require('./channel-range')
+const peripherals = [{id: "all", label: "All Peripherals"},{id: "km", label: "Keyboard/Mouse"}, {id: "spk", label: "Speaker"}, {id: "usb1", label: "USB1"}, {id:"usb2", label:"USB2"}]
 
-const PERIPHERAL_CHOICES = [
-	{ id: 'km', label: 'Keyboard & Mouse' },
-	{ id: 'spk', label: 'Speakers' },
-	{ id: 'usb1', label: 'USB 1' },
-	{ id: 'usb2', label: 'USB 2' },
-]
-
-module.exports = function (self) {
-	const channelChoices = buildChannelChoices(maxChannel(self))
-
+module.exports = async function (self) {
 	self.setFeedbackDefinitions({
-		channel_active: {
+		active_channel: {
 			name: 'Peripheral on Channel',
 			type: 'boolean',
-			label: 'Change style when peripheral is on the selected channel',
+			label: 'Peripheral Channel State',
 			defaultStyle: {
-				bgcolor: combineRgb(0, 200, 0),
+				bgcolor: combineRgb(0, 153, 0),
 				color: combineRgb(0, 0, 0),
 			},
 			options: [
 				{
 					id: 'peripheral',
 					type: 'dropdown',
-					label: 'Peripheral',
-					default: 'km',
-					choices: PERIPHERAL_CHOICES,
+					label: 'peripheral',
+					choices: peripherals,
+					default: peripherals[0].id
 				},
 				{
 					id: 'channel',
 					type: 'dropdown',
 					label: 'Channel',
-					default: '1',
-					choices: channelChoices,
-				},
+					choices: self.channelList,
+					default: self.channelList[0] ? self.channelList[0].id : '1',
+				}
 			],
 			callback: (feedback) => {
-				const peripheral = feedback.options.peripheral
-				const expected = parseInt(feedback.options.channel)
-				return self.channelState[peripheral] === expected
+				if (parseInt(feedback.options.channel) > self.config.ccs_version) {
+        			return false;
+    }
+				if(feedback.options.peripheral == "all"){
+					return self.deviceStatus["km"] === feedback.options.channel && self.deviceStatus["spk"] === feedback.options.channel && self.deviceStatus["usb1"] === feedback.options.channel && self.deviceStatus["usb2"] === feedback.options.channel
+				}
+				return self.deviceStatus[feedback.options.peripheral] === feedback.options.channel;
 			},
 		},
+		temperature_check: {
+			type: 'boolean',
+			name: 'Device Temperature Alert',
+			options: [
+				{
+					type: 'dropdown',
+					id: 'operator',
+					label: 'Comparison',
+					choices: [
+						{ id: '<', label: '< (Less than)' },
+						{ id: '<=', label: '<= (Less than or equal)' },
+						{ id: '===', label: '= (Equal to)' },
+						{ id: '>=', label: '>= (Greater than or equal)' },
+						{ id: '>', label: '> (Greater than)' }
+					],
+					default: '>'
+				},
+				{
+					type: 'number',
+					id: 'targetValue',
+					label: 'Target Temperature',
+					default: 30,
+					min: 0,
+					max: 150
+				}
+			],
+			callback: (feedback) => {
+				// 1. The live hardware state
+				const currentTemp = parseInt(self.deviceStatus.temp); 
+				
+				// 2. The user's typed value
+				const target = parseInt(feedback.options.targetValue); 
+				
+				// 3. The mathematical map
+				const math = {
+					'<': (a, b) => a < b,
+					'>': (a, b) => a > b,
+					'===': (a, b) => a === b,
+					'>=': (a, b) => a >= b,
+					'<=': (a, b) => a <= b
+				};
+
+				// 4. Safely execute the dynamic string comparison
+				return math[feedback.options.operator](currentTemp, target);
+			}
+	},
+	power_status: {
+		type: 'boolean',
+		name: 'Power Status Alert',
+		options: [
+			{
+				type: 'dropdown',
+				id: 'power_supply',
+				label: 'Power Supply',
+				choices: [
+					{id: "psu1", label: "PSU 1"},
+					{id: "psu2", label: "PSU 2"}
+				],
+				default: "psu1"
+			},
+			{
+            type: 'dropdown',
+            id: 'state',
+            label: 'Target State',
+            choices: [
+                { id: 'Active', label: 'Active' },
+                { id: 'Inactive', label: 'Inactive' }
+            ],
+            default: 'Inactive'
+        }
+		],
+		callback: (feedback) => {
+			return self.deviceStatus[feedback.options.power_supply] === feedback.options.state;
+		}
+	}
 	})
 }

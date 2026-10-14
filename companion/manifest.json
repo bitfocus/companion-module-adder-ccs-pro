@@ -12,6 +12,10 @@
 		{
 			"name": "Tom Reynolds",
 			"email": "tom@reynoldsproduction.com"
+		},
+		{
+			"name": "Zach Larsen",
+			"email": "zach.larsen@adder.com"
 		}
 	],
 	"runtime": {
