@@ -16,12 +16,12 @@
 	},
 	"dependencies": {
 		"@companion-module/base": "~1.14.1",
-		"urllib": "4.9.0"
+		"urllib": "4.9.1"
 	},
 	"devDependencies": {
-		"@companion-module/tools": "^2.6.1",
-		"prettier": "^3.7.4"
+		"@companion-module/tools": "^2.8.0",
+		"prettier": "^3.9.10"
 	},
 	"prettier": "@companion-module/tools/.prettierrc.json",
-	"packageManager": "yarn@4.12.0"
+	"packageManager": "yarn@4.18.1"
 }
